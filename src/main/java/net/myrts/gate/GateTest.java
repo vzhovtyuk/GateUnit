@@ -186,6 +186,10 @@ public class GateTest {
 
     @Test
     public void shouldParseAnnieAnnotations() throws IOException, GateException {
+        String workDir = System.getProperty("user.dir");
+        System.setProperty("gate.plugins.home", workDir + "/src/main/resources/gate-home/plugins");
+        System.setProperty("gate.site.config", workDir + "/src/main/resources/gate-home/gate.xml");
+        System.setProperty("gate.corpus.files", String.valueOf(new File(workDir + "/src/main/resources/corpus/1.txt").toURI()));
         // initialise the GATE library
         Out.prln("Initialising GATE...");
         Gate.init();
