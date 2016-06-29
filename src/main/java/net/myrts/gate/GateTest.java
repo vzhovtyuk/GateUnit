@@ -1,16 +1,11 @@
 package net.myrts.gate;
 
-import gate.Annotation;
-import gate.AnnotationSet;
-import gate.Corpus;
-import gate.CorpusController;
-import gate.Document;
-import gate.Factory;
-import gate.FeatureMap;
-import gate.Gate;
-import gate.GateConstants;
+import gate.*;
 import gate.corpora.RepositioningInfo;
+import gate.creole.ANNIEConstants;
+import gate.creole.ConditionalSerialAnalyserController;
 import gate.creole.ResourceInstantiationException;
+import gate.util.Files;
 import gate.util.GateException;
 import gate.util.Out;
 import gate.util.persistence.PersistenceManager;
@@ -19,27 +14,14 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Vector;
-
-import static org.junit.Assert.assertNotNull;
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for extractor component.
@@ -355,6 +337,88 @@ public class GateTest {
         return corpus;
     }
 
+
+    /*
+       * This method runs ANNIE with defaults on a document, then saves
+       * it as a GATE XML document and loads it back. All the annotations on the
+       * loaded document should be the same as the original ones.
+       *
+       * It also verifies if the matches feature still holds after an export/import to XML
+       */
+    public void testAnnotationConsistencyForSaveAsXml() throws Exception {
+        // Load a document from the test repository
+        //Document origDoc = gate.Factory.newDocument(Gate.getUrl("tests/xml/gateTestSaveAsXML.xml"));
+        String testDoc = gate.util.Files.getGateResourceAsString("gate.ac.uk/tests/xml/gateTestSaveAsXML.xml");
+        Document origDoc = gate.Factory.newDocument(testDoc);
+
+        // Load ANNIE with defaults and run it on the document
+        ConditionalSerialAnalyserController annie = (ConditionalSerialAnalyserController)
+                PersistenceManager.loadObjectFromFile(new File(new File(
+                        Gate.getPluginsHome(), ANNIEConstants.PLUGIN_DIR),
+                        ANNIEConstants.DEFAULT_FILE));
+        assertTrue("ANNIE not loaded!", annie != null);
+        Corpus c = Factory.newCorpus("test");
+        c.add(origDoc);
+        annie.setCorpus(c);
+        annie.execute();
+
+        // SaveAS XML and reload the document into another GATE doc
+        // Export the Gate document called origDoc as XML, into a temp file,
+        // using the working encoding
+        String workingEncoding = StandardCharsets.UTF_8.name();
+        File xmlFile = Files.writeTempFile(origDoc.toXml(), workingEncoding);
+        System.out.println("Saved to temp file :" + xmlFile.toURI().toURL());
+
+        Document reloadedDoc = gate.Factory.newDocument(xmlFile.toURI().toURL(), workingEncoding);
+        // Verifies if the maximum annotation ID on the origDoc is less than the
+        // Annotation ID generator of the document.
+
+        // Verify if the annotations are identical in the two docs.
+        Map<Integer, Annotation> origAnnotMap = buildID2AnnotMap(origDoc);
+        Map<Integer, Annotation> reloadedAnnMap = buildID2AnnotMap(reloadedDoc);
+
+        // Clean up the XMl file
+        xmlFile.delete();
+    }// End testAnnotationIDConsistencyForSaveAsXml
+
+
+    /**
+     * Scans a target Doc for all Annotations and builds a map (from anot ID to annot) in the process
+     * I also checks to see if there are two annotations with the same ID.
+     *
+     * @param aDoc The GATE doc to be scaned
+     * @return a Map ID2Annot
+     */
+    private Map<Integer, Annotation> buildID2AnnotMap(Document aDoc) {
+        Map<Integer, Annotation> id2AnnMap = new HashMap<Integer, Annotation>();
+        // Scan the default annotation set
+        AnnotationSet annotSet = aDoc.getAnnotations();
+        addAnnotSet2Map(annotSet, id2AnnMap);
+        // Scan all named annotation sets
+        if (aDoc.getNamedAnnotationSets() != null) {
+            for (Iterator<AnnotationSet> namedAnnotSetsIter = aDoc.getNamedAnnotationSets().values().iterator();
+                 namedAnnotSetsIter.hasNext(); ) {
+
+                addAnnotSet2Map(namedAnnotSetsIter.next(), id2AnnMap);
+            }// End while
+        }// End if
+        return id2AnnMap;
+    }// End of buildID2AnnotMap()
+
+
+    private Map<Integer, Annotation> addAnnotSet2Map(AnnotationSet annotSet, Map<Integer, Annotation> id2AnnMap) {
+        for (Iterator<Annotation> it = annotSet.iterator(); it.hasNext(); ) {
+            Annotation a = it.next();
+            Integer id = a.getId();
+
+            assertTrue("Found two annotations(one with type = " + a.getType() +
+                    ")with the same ID=" + id, !id2AnnMap.keySet().contains(id));
+
+            id2AnnMap.put(id, a);
+        }// End for
+        return id2AnnMap;
+    }
+    
     public static void assertByteArrayEquals(byte[] expected, byte[] actual) {
         assertNotNull(actual);
         if (!Arrays.equals(expected, actual)) {
