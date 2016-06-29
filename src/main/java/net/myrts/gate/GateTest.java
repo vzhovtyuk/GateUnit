@@ -7,6 +7,7 @@ import gate.creole.ConditionalSerialAnalyserController;
 import gate.creole.ResourceInstantiationException;
 import gate.util.Files;
 import gate.util.GateException;
+import gate.util.InvalidOffsetException;
 import gate.util.Out;
 import gate.util.persistence.PersistenceManager;
 import org.junit.ComparisonFailure;
@@ -186,10 +187,41 @@ public class GateTest {
 
     @Test
     public void shouldParseAnnieAnnotations() throws IOException, GateException {
+        //given
+        //when
+        Corpus corpus = annotateDocument("1.txt");
+
+        // then
+        Iterator iter = corpus.iterator();
+        Document doc = (Document) iter.next();
+        List<ContentAnnotation> annotations = getDefaultAnnotations("Location", doc);
+        assertTrue(!annotations.isEmpty());
+    }
+
+    private List<ContentAnnotation> getDefaultAnnotations(String annotationType, Document doc) throws InvalidOffsetException {
+        AnnotationSet annotationSet = doc.getAnnotations();
+        assertNotNull(annotationSet);
+        DocumentContent docContent = doc.getContent();
+        
+        List<ContentAnnotation> annotations = new ArrayList<>();
+        for(Annotation annotation : annotationSet) {
+            if(annotationType.equals(annotation.getType())) {
+                FeatureMap featureMap = annotation.getFeatures();
+                List<Integer> matches = (List<Integer>) featureMap.get("matches");
+                Integer startNode = matches.get(0);
+                Integer endNode = matches.get(1);
+                
+                annotations.add(new ContentAnnotation(annotation, docContent.toString().substring(startNode.intValue(), endNode.intValue())));
+            }
+        }
+        return annotations;
+    }
+
+    private Corpus annotateDocument(String fileName) throws GateException, IOException {
         String workDir = System.getProperty("user.dir");
         System.setProperty("gate.plugins.home", workDir + "/src/main/resources/gate-home/plugins");
         System.setProperty("gate.site.config", workDir + "/src/main/resources/gate-home/gate.xml");
-        System.setProperty("gate.corpus.files", String.valueOf(new File(workDir + "/src/main/resources/corpus/1.txt").toURI()));
+        System.setProperty("gate.corpus.files", String.valueOf(new File(workDir + "/src/main/resources/corpus/" + fileName).toURI()));
         // initialise the GATE library
         Out.prln("Initialising GATE...");
         Gate.init();
@@ -206,120 +238,7 @@ public class GateTest {
         // tell the pipeline about the corpus and run it
         annie.setCorpus(corpus);
         annie.execute();
-
-        // for each document, get an XML document with the
-        // person and location names added
-        Iterator iter = corpus.iterator();
-        int count = 0;
-        String startTagPart_1 = "<span GateID=\"";
-        String startTagPart_2 = "\" title=\"";
-        String startTagPart_3 = "\" style=\"background:Red;\">";
-        String endTag = "</span>";
-
-        while (iter.hasNext()) {
-            Document doc = (Document) iter.next();
-            AnnotationSet defaultAnnotSet = doc.getAnnotations();
-            Set<String> annotTypesRequired = new HashSet<String>();
-            annotTypesRequired.add("Person");
-            annotTypesRequired.add("Location");
-            Set<Annotation> peopleAndPlaces =
-                    new HashSet<Annotation>(defaultAnnotSet.get(annotTypesRequired));
-
-            FeatureMap features = doc.getFeatures();
-            String originalContent = (String)
-                    features.get(GateConstants.ORIGINAL_DOCUMENT_CONTENT_FEATURE_NAME);
-            RepositioningInfo info = (RepositioningInfo)
-                    features.get(GateConstants.DOCUMENT_REPOSITIONING_INFO_FEATURE_NAME);
-
-            ++count;
-            File file = new File("StANNIE_" + count + ".HTML");
-            Out.prln("File name: '" + file.getAbsolutePath() + "'");
-            if (originalContent != null && info != null) {
-                Out.prln("OrigContent and reposInfo existing. Generate file...");
-
-                Iterator it = peopleAndPlaces.iterator();
-                SortedAnnotationList sortedAnnotations = new SortedAnnotationList();
-
-                while (it.hasNext()) {
-                    sortedAnnotations.addSortedExclusive((Annotation) it.next());
-                } // while
-
-                StringBuilder editableContent = new StringBuilder(originalContent);
-                // insert anotation tags backward
-                Out.prln("Unsorted annotations count: " + peopleAndPlaces.size());
-                Out.prln("Sorted annotations count: " + sortedAnnotations.size());
-                for (int i = sortedAnnotations.size() - 1; i >= 0; --i) {
-                    final Annotation currAnnot = (Annotation) sortedAnnotations.get(i);
-                    long insertPositionStart =
-                            currAnnot.getStartNode().getOffset();
-                    insertPositionStart = info.getOriginalPos(insertPositionStart);
-                    long insertPositionEnd = currAnnot.getEndNode().getOffset();
-                    insertPositionEnd = info.getOriginalPos(insertPositionEnd, true);
-                    if (insertPositionEnd != -1 && insertPositionStart != -1) {
-                        editableContent.insert((int) insertPositionEnd, endTag);
-                        editableContent.insert((int) insertPositionStart, startTagPart_3);
-                        editableContent.insert((int) insertPositionStart,
-                                currAnnot.getType());
-                        editableContent.insert((int) insertPositionStart, startTagPart_2);
-                        editableContent.insert((int) insertPositionStart,
-                                currAnnot.getId().toString());
-                        editableContent.insert((int) insertPositionStart, startTagPart_1);
-                    } // if
-                } // for
-
-                FileWriter writer = new FileWriter(file);
-                writer.write(editableContent.toString());
-                writer.close();
-            } // if - should generate
-            else if (originalContent != null) {
-                Out.prln("OrigContent existing. Generate file...");
-
-                Iterator it = peopleAndPlaces.iterator();
-                Annotation currAnnot;
-                SortedAnnotationList sortedAnnotations = new SortedAnnotationList();
-
-                while (it.hasNext()) {
-                    currAnnot = (Annotation) it.next();
-                    sortedAnnotations.addSortedExclusive(currAnnot);
-                } // while
-
-                StringBuilder editableContent = new StringBuilder(originalContent);
-                long insertPositionEnd;
-                long insertPositionStart;
-                // insert anotation tags backward
-                Out.prln("Unsorted annotations count: " + peopleAndPlaces.size());
-                Out.prln("Sorted annotations count: " + sortedAnnotations.size());
-                for (int i = sortedAnnotations.size() - 1; i >= 0; --i) {
-                    currAnnot = (Annotation) sortedAnnotations.get(i);
-                    insertPositionStart =
-                            currAnnot.getStartNode().getOffset();
-                    insertPositionEnd = currAnnot.getEndNode().getOffset();
-                    if (insertPositionEnd != -1 && insertPositionStart != -1) {
-                        editableContent.insert((int) insertPositionEnd, endTag);
-                        editableContent.insert((int) insertPositionStart, startTagPart_3);
-                        editableContent.insert((int) insertPositionStart,
-                                currAnnot.getType());
-                        editableContent.insert((int) insertPositionStart, startTagPart_2);
-                        editableContent.insert((int) insertPositionStart,
-                                currAnnot.getId().toString());
-                        editableContent.insert((int) insertPositionStart, startTagPart_1);
-                    } // if
-                } // for
-
-                FileWriter writer = new FileWriter(file);
-                writer.write(editableContent.toString());
-                writer.close();
-            } else {
-                Out.prln("Repositioning: " + info);
-            }
-
-            String xmlDocument = doc.toXml(peopleAndPlaces, false);
-            String fileName = "StANNIE_toXML_" + count + ".HTML";
-            FileWriter writer = new FileWriter(fileName);
-            writer.write(xmlDocument);
-            writer.close();
-
-        } // for each doc
+        return corpus;
     }
 
     private Corpus addDocumentsToCorpus() throws ResourceInstantiationException, MalformedURLException {
