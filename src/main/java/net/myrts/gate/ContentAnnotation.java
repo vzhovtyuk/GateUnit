@@ -11,19 +11,28 @@ import gate.Annotation;
  */
 public class ContentAnnotation {
     
-    private final String docContent;
+    private final String markedText;
     private final Annotation annotation;
 
-    public ContentAnnotation(Annotation annotation, String docContent) {
+    public ContentAnnotation(Annotation annotation, String markedText) {
         this.annotation = annotation;
-        this.docContent = docContent;
+        this.markedText = markedText;
     }
 
     public Annotation getAnnotation() {
         return annotation;
     }
 
-    public String getDocContent() {
-        return docContent;
+    public String getMarkedText() {
+        return markedText;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("ContentAnnotation{");
+        sb.append("markedText='").append(markedText).append('\'');
+        sb.append(", annotation=").append(annotation);
+        sb.append('}');
+        return sb.toString();
     }
 }
