@@ -15,10 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -78,14 +75,12 @@ public class GateTest {
                 docFeatures.get(GateConstants.ORIGINAL_DOCUMENT_CONTENT_FEATURE_NAME);
         RepositioningInfo info = (RepositioningInfo)
                 docFeatures.get(GateConstants.DOCUMENT_REPOSITIONING_INFO_FEATURE_NAME);
-
-        SortedAnnotationList sortedAnnotations = new SortedAnnotationList();
-        for (Annotation anAnnotationSet : annotationSet) {
-            sortedAnnotations.addSortedExclusive(anAnnotationSet);
-        } // while
-        
+        List<Annotation> annotationList = new ArrayList<>(annotationSet);
+        Collections.sort(annotationList, (o1, o2) -> {
+            return o1.getStartNode().getOffset().compareTo(o2.getStartNode().getOffset());
+        });
         List<ContentAnnotation> annotations = new ArrayList<>();
-        for(Annotation annotation : sortedAnnotations) {
+        for(Annotation annotation : annotationList) {
             if(annotationType.equals(annotation.getType())) {
                 long insertPositionStart =
                         annotation.getStartNode().getOffset();
