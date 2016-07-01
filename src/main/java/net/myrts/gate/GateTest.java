@@ -28,30 +28,18 @@ import static org.junit.Assert.*;
  */
 public class GateTest {
     private static final Logger LOG = LoggerFactory.getLogger(GateTest.class);
-
-
-    /**
-     * Initialise the ANNIE system. This creates a "corpus pipeline"
-     * application that can be used to run sets of documents through
-     * the extraction system.
-     */
-    private CorpusController initAnnie() throws GateException, IOException {
-        // load the ANNIE application from the saved state in plugins/ANNIE
-        File pluginsHome = Gate.getPluginsHome();
-        File anniePlugin = new File(pluginsHome, "ANNIE");
-        File annieGapp = new File(anniePlugin, "ANNIE_with_defaults.gapp");
-        return (CorpusController) PersistenceManager.loadObjectFromFile(annieGapp);
-    } // initAnnie()
-
+    
+    private static final String PLUGIN_NAME = "ANNIE";
+    
+    private static final String PROJECT_FILE_NAME = "ANNIE_with_defaults.gapp";
+    
     @Test
-    public void shouldParseAnnieAnnotations() throws IOException, GateException {
+    public void shouldParseLocation() throws IOException, GateException {
         //given
         //when
-        Corpus corpus = annotateDocument("1.txt");
-
+        Document doc = getDocument("1.txt");
+        
         String annotationType = "Location";
-        Iterator iter = corpus.iterator();
-        Document doc = (Document) iter.next();
         List<ContentAnnotation> annotations = getDefaultAnnotations(annotationType, doc);
         assertTrue(!annotations.isEmpty());
         LOG.info("Matched annotations by " + annotationType + " annotations " + annotations);
@@ -66,9 +54,95 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, "United States", 1180L);
         assertAnnotation(annotations, annotationType, "Lee", 2204L);
         assertAnnotation(annotations, annotationType, "U.S.", 2241L);
-        assertAnnotation(annotations, annotationType, "Wall", 2247L);
+        assertAnnotation(annotations, annotationType, "Wall", 2247L);       
     }
 
+    @Test
+    public void shouldParsePerson() throws IOException, GateException {
+        //given
+        //when
+        Document doc = getDocument("1.txt");
+        
+        String annotationType = "Person";
+        List<ContentAnnotation> annotations = getDefaultAnnotations(annotationType, doc);
+        assertTrue(!annotations.isEmpty());
+        LOG.info("Matched annotations by " + annotationType + " annotations " + annotations);
+        
+        // then
+        assertAnnotation(annotations, annotationType, "Griswold", 11L);
+        assertAnnotation(annotations, annotationType, "Salmon P. Chase", 115L);
+        assertAnnotation(annotations, annotationType, "Chase", 242L);
+        assertAnnotation(annotations, annotationType, "Mrs. Hepburn", 350L);
+        assertAnnotation(annotations, annotationType, "Henry Griswold", 398L);
+        assertAnnotation(annotations, annotationType, "Griswold", 532L);
+        assertAnnotation(annotations, annotationType, "Mrs. Hepburn", 611L);
+        assertAnnotation(annotations, annotationType, "Mrs. Hepburn", 843L);
+        assertAnnotation(annotations, annotationType, "Chase", 2278L);
+    }
+
+    @Test
+    public void shouldParseLookupCountryCode() throws IOException, GateException {
+        //given
+        //when
+        Corpus corpus = annotateDocument("1.txt");
+
+        String annotationType = "Lookup";
+        String annotationSubType = "govern_key";
+        Iterator iter = corpus.iterator();
+        Document doc = (Document) iter.next();
+        List<ContentAnnotation> annotations = getDefaultAnnotations(annotationType, doc);
+        assertTrue(!annotations.isEmpty());
+        LOG.info("Matched annotations by " + annotationType + " annotations " + annotations);
+        
+        // then
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 55L);
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 149L);
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 581L);
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 771L);
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 894L);
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 952L);
+        assertAnnotation(annotations, annotationType, annotationSubType, "Court", 982L);
+    }
+
+    private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String annotationSubType, String matchedValue, Long startPosition) {
+        boolean matched = false;
+        for(ContentAnnotation contentAnnotation : annotations) {
+            Annotation annotation = contentAnnotation.getAnnotation();
+            FeatureMap featureMap = annotation.getFeatures();
+            if(matchedValue.equals(contentAnnotation.getMarkedText())
+                    && Objects.equals(annotationSubType, featureMap.get("majorType"))
+                    && Objects.equals(startPosition, annotation.getStartNode().getOffset())) {
+                assertEquals("Start position should match for " + contentAnnotation, startPosition, annotation.getStartNode().getOffset());
+                assertEquals("End position should match for " + contentAnnotation, Long.valueOf(startPosition + matchedValue.length()), annotation.getEndNode().getOffset());
+                matched = true;
+            }
+        }
+        if(!matched) {
+            fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
+        }
+    }
+
+    private Document getDocument(String inputFileName) throws GateException, IOException {
+        Corpus corpus = annotateDocument(inputFileName);
+
+        Iterator iter = corpus.iterator();
+        return (Document) iter.next();
+    }
+
+    /**
+     * Initialise the ANNIE system. This creates a "corpus pipeline"
+     * application that can be used to run sets of documents through
+     * the extraction system.
+     */
+    private CorpusController initGateProject(String pluginName, String projectFileName) throws GateException, IOException {
+        // load the ANNIE application from the saved state in plugins/ANNIE
+        File pluginsHome = Gate.getPluginsHome();
+        File anniePlugin = new File(pluginsHome, pluginName);
+        File annieGapp = new File(anniePlugin, projectFileName);
+        return (CorpusController) PersistenceManager.loadObjectFromFile(annieGapp);
+    } // initGateProject()
+
+    
     private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String matchedValue, Long startPosition) {
         boolean matched = false;
         for(ContentAnnotation contentAnnotation : annotations) {
@@ -133,8 +207,7 @@ public class GateTest {
         Gate.init();
         Out.prln("...GATE initialised");
 
-        // initialise ANNIE (this may take several minutes)
-        CorpusController annieController = initAnnie();
+        CorpusController annieController = initGateProject(PLUGIN_NAME, PROJECT_FILE_NAME);
 
         // create a GATE corpus and add a document for each command-line
         // argument
@@ -164,43 +237,5 @@ public class GateTest {
         } // for each of args
         return corpus;
     }
-
-    /**
-     *
-     */
-    public static class SortedAnnotationList extends Vector<Annotation> {
-        public boolean addSortedExclusive(Annotation annot) {
-            Annotation currAnot = null;
-
-            // overlapping check
-            for (Object o : this) {
-                currAnot = (Annotation) o;
-                if (annot.overlaps(currAnot)) {
-                    return false;
-                } // if
-            } // for
-
-            long annotStart = annot.getStartNode().getOffset();
-            long currStart;
-            // insert
-            for (int i = 0; i < size(); ++i) {
-                currAnot = get(i);
-                currStart = currAnot.getStartNode().getOffset();
-                if (annotStart < currStart) {
-                    insertElementAt(annot, i);
-        /*
-         Out.prln("Insert start: "+annotStart+" at position: "+i+" size="+size());
-         Out.prln("Current start: "+currStart);
-         */
-                    return true;
-                } // if
-            } // for
-
-            int size = size();
-            insertElementAt(annot, size);
-//Out.prln("Insert start: "+annotStart+" at size position: "+size);
-            return true;
-        } // addSorted
-    } // SortedAnnotationList
 
 }
