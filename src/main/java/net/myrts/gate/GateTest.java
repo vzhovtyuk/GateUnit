@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+import static net.myrts.gate.Asserts.assertAnnotation;
 import static org.junit.Assert.*;
 
 /**
@@ -104,23 +105,6 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, annotationSubType, "Court", 982L);
     }
 
-    private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String annotationSubType, String matchedValue, Long startPosition) {
-        boolean matched = false;
-        for(ContentAnnotation contentAnnotation : annotations) {
-            Annotation annotation = contentAnnotation.getAnnotation();
-            FeatureMap featureMap = annotation.getFeatures();
-            if(matchedValue.equals(contentAnnotation.getMarkedText())
-                    && Objects.equals(annotationSubType, featureMap.get("majorType"))
-                    && Objects.equals(startPosition, annotation.getStartNode().getOffset())) {
-                assertEquals("Start position should match for " + contentAnnotation, startPosition, annotation.getStartNode().getOffset());
-                assertEquals("End position should match for " + contentAnnotation, Long.valueOf(startPosition + matchedValue.length()), annotation.getEndNode().getOffset());
-                matched = true;
-            }
-        }
-        if(!matched) {
-            fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
-        }
-    }
 
     private Document getDocument(String inputFileName) throws GateException, IOException {
         Corpus corpus = annotateDocument(inputFileName);
@@ -141,23 +125,6 @@ public class GateTest {
         File annieGapp = new File(anniePlugin, projectFileName);
         return (CorpusController) PersistenceManager.loadObjectFromFile(annieGapp);
     } // initGateProject()
-
-    
-    private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String matchedValue, Long startPosition) {
-        boolean matched = false;
-        for(ContentAnnotation contentAnnotation : annotations) {
-            Annotation annotation = contentAnnotation.getAnnotation();
-            if(matchedValue.equals(contentAnnotation.getMarkedText())
-                    && Objects.equals(startPosition, annotation.getStartNode().getOffset())) {
-                assertEquals("Start position should match for " + contentAnnotation, startPosition, annotation.getStartNode().getOffset());
-                assertEquals("End position should match for " + contentAnnotation, Long.valueOf(startPosition + matchedValue.length()), annotation.getEndNode().getOffset());
-                matched = true;
-            }
-        }
-        if(!matched) {
-            fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
-        }
-    }
 
     private List<ContentAnnotation> getNamedAnnotations(String annotationType, Document doc) throws InvalidOffsetException {
         AnnotationSet annotationSet = doc.getAnnotations(annotationType);
