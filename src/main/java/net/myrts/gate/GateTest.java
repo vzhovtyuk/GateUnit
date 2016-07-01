@@ -17,9 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test cases for extractor component.
@@ -51,35 +49,39 @@ public class GateTest {
         //when
         Corpus corpus = annotateDocument("1.txt");
 
-
+        String annotationType = "Location";
         Iterator iter = corpus.iterator();
         Document doc = (Document) iter.next();
-        List<ContentAnnotation> annotations = getDefaultAnnotations("Location", doc);
+        List<ContentAnnotation> annotations = getDefaultAnnotations(annotationType, doc);
         assertTrue(!annotations.isEmpty());
-
+        LOG.info("Matched annotations by " + annotationType + " annotations " + annotations);
+        
         // then
-        assertAnnotation(annotations, "Location", "Hepburn", 0L, 7L);
-        assertAnnotation(annotations, "Location", "United States", 34L, 37L);
-        assertAnnotation(annotations, "Location", "United States", 485L, 498L);
-        assertAnnotation(annotations, "Location", "Hepburn", 546L, 553L);
+        assertAnnotation(annotations, annotationType, "Hepburn", 0L);
+        assertAnnotation(annotations, annotationType, "United States", 68L);
+        assertAnnotation(annotations, annotationType, "United States", 485L);
+        assertAnnotation(annotations, annotationType, "Hepburn", 546L);
+        assertAnnotation(annotations, annotationType, "United States", 636L);
+        assertAnnotation(annotations, annotationType, "Kentucky", 790L);
+        assertAnnotation(annotations, annotationType, "United States", 1180L);
+        assertAnnotation(annotations, annotationType, "Lee", 2204L);
+        assertAnnotation(annotations, annotationType, "U.S.", 2241L);
+        assertAnnotation(annotations, annotationType, "Wall", 2247L);
     }
 
-    private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String matchedValue, Long startPosition, Long endPosition) {
-        List<ContentAnnotation> annotationsByType = new ArrayList<>();
+    private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String matchedValue, Long startPosition) {
+        boolean matched = false;
         for(ContentAnnotation contentAnnotation : annotations) {
-            Annotation annotation = contentAnnotation.getAnnotation();
-            if(annotationType.equals(annotation.getType())) {
-                annotationsByType.add(contentAnnotation);
-            }
-        }
-        Collections.sort(annotationsByType, (o1, o2) -> o1.getAnnotation().getStartNode().getOffset().compareTo(o2.getAnnotation().getStartNode().getOffset()));
-        for(ContentAnnotation contentAnnotation : annotationsByType) {
             Annotation annotation = contentAnnotation.getAnnotation();
             if(matchedValue.equals(contentAnnotation.getMarkedText())
                     && Objects.equals(startPosition, annotation.getStartNode().getOffset())) {
                 assertEquals("Start position should match for " + contentAnnotation, startPosition, annotation.getStartNode().getOffset());
-                assertEquals("End position should match for " + contentAnnotation, endPosition, annotation.getEndNode().getOffset());
+                assertEquals("End position should match for " + contentAnnotation, Long.valueOf(startPosition + matchedValue.length()), annotation.getEndNode().getOffset());
+                matched = true;
             }
+        }
+        if(!matched) {
+            fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
         }
     }
 
