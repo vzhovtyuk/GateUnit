@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -29,8 +30,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class GateTest {
     private static final Logger LOG = LoggerFactory.getLogger(GateTest.class);
-    
-    
+
+
     /**
      * Initialise the ANNIE system. This creates a "corpus pipeline"
      * application that can be used to run sets of documents through
@@ -50,11 +51,36 @@ public class GateTest {
         //when
         Corpus corpus = annotateDocument("1.txt");
 
-        // then
+
         Iterator iter = corpus.iterator();
         Document doc = (Document) iter.next();
         List<ContentAnnotation> annotations = getDefaultAnnotations("Location", doc);
         assertTrue(!annotations.isEmpty());
+
+        // then
+        assertAnnotation(annotations, "Location", "Hepburn", 0L, 7L);
+        assertAnnotation(annotations, "Location", "United States", 34L, 37L);
+        assertAnnotation(annotations, "Location", "United States", 485L, 498L);
+        assertAnnotation(annotations, "Location", "Hepburn", 546L, 553L);
+    }
+
+    private void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String matchedValue, Long startPosition, Long endPosition) {
+        List<ContentAnnotation> annotationsByType = new ArrayList<>();
+        for(ContentAnnotation contentAnnotation : annotations) {
+            Annotation annotation = contentAnnotation.getAnnotation();
+            if(annotationType.equals(annotation.getType())) {
+                annotationsByType.add(contentAnnotation);
+            }
+        }
+        Collections.sort(annotationsByType, (o1, o2) -> o1.getAnnotation().getStartNode().getOffset().compareTo(o2.getAnnotation().getStartNode().getOffset()));
+        for(ContentAnnotation contentAnnotation : annotationsByType) {
+            Annotation annotation = contentAnnotation.getAnnotation();
+            if(matchedValue.equals(contentAnnotation.getMarkedText())
+                    && Objects.equals(startPosition, annotation.getStartNode().getOffset())) {
+                assertEquals("Start position should match for " + contentAnnotation, startPosition, annotation.getStartNode().getOffset());
+                assertEquals("End position should match for " + contentAnnotation, endPosition, annotation.getEndNode().getOffset());
+            }
+        }
     }
 
     private List<ContentAnnotation> getNamedAnnotations(String annotationType, Document doc) throws InvalidOffsetException {
@@ -62,7 +88,7 @@ public class GateTest {
         assertNotNull(annotationSet);
         return getContentAnnotations(annotationType, doc, annotationSet);
     }
-    
+
     private List<ContentAnnotation> getDefaultAnnotations(String annotationType, Document doc) throws InvalidOffsetException {
         AnnotationSet annotationSet = doc.getAnnotations();
         assertNotNull(annotationSet);
@@ -76,9 +102,7 @@ public class GateTest {
         RepositioningInfo info = (RepositioningInfo)
                 docFeatures.get(GateConstants.DOCUMENT_REPOSITIONING_INFO_FEATURE_NAME);
         List<Annotation> annotationList = new ArrayList<>(annotationSet);
-        Collections.sort(annotationList, (o1, o2) -> {
-            return o1.getStartNode().getOffset().compareTo(o2.getStartNode().getOffset());
-        });
+        Collections.sort(annotationList, (o1, o2) -> o1.getStartNode().getOffset().compareTo(o2.getStartNode().getOffset()));
         List<ContentAnnotation> annotations = new ArrayList<>();
         for(Annotation annotation : annotationList) {
             if(annotationType.equals(annotation.getType())) {

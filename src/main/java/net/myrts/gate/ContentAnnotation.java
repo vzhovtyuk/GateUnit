@@ -31,7 +31,9 @@ public class ContentAnnotation {
     public String toString() {
         final StringBuffer sb = new StringBuffer("ContentAnnotation{");
         sb.append("markedText='").append(markedText).append('\'');
-        sb.append(", annotation=").append(annotation);
+        sb.append(", annotationType=").append(annotation.getType());
+        sb.append(", annotationStart=").append(annotation.getStartNode().getOffset());
+        sb.append(", annotationEnd=").append(annotation.getEndNode().getOffset());
         sb.append('}');
         return sb.toString();
     }
