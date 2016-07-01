@@ -2,24 +2,23 @@ package net.myrts.gate;
 
 import gate.*;
 import gate.corpora.RepositioningInfo;
-import gate.creole.ANNIEConstants;
-import gate.creole.ConditionalSerialAnalyserController;
 import gate.creole.ResourceInstantiationException;
-import gate.util.Files;
 import gate.util.GateException;
 import gate.util.InvalidOffsetException;
 import gate.util.Out;
 import gate.util.persistence.PersistenceManager;
-import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -80,9 +79,13 @@ public class GateTest {
         RepositioningInfo info = (RepositioningInfo)
                 docFeatures.get(GateConstants.DOCUMENT_REPOSITIONING_INFO_FEATURE_NAME);
 
-
+        SortedAnnotationList sortedAnnotations = new SortedAnnotationList();
+        for (Annotation anAnnotationSet : annotationSet) {
+            sortedAnnotations.addSortedExclusive(anAnnotationSet);
+        } // while
+        
         List<ContentAnnotation> annotations = new ArrayList<>();
-        for(Annotation annotation : annotationSet) {
+        for(Annotation annotation : sortedAnnotations) {
             if(annotationType.equals(annotation.getType())) {
                 long insertPositionStart =
                         annotation.getStartNode().getOffset();
@@ -144,11 +147,7 @@ public class GateTest {
     /**
      *
      */
-    public static class SortedAnnotationList extends Vector {
-        public SortedAnnotationList() {
-            super();
-        } // SortedAnnotationList
-
+    public static class SortedAnnotationList extends Vector<Annotation> {
         public boolean addSortedExclusive(Annotation annot) {
             Annotation currAnot = null;
 
@@ -164,7 +163,7 @@ public class GateTest {
             long currStart;
             // insert
             for (int i = 0; i < size(); ++i) {
-                currAnot = (Annotation) get(i);
+                currAnot = get(i);
                 currStart = currAnot.getStartNode().getOffset();
                 if (annotStart < currStart) {
                     insertElementAt(annot, i);
