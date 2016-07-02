@@ -53,11 +53,11 @@ public class Asserts {
         }
     }
     
-    public static List<String> generateAnnotations(List<ContentAnnotation> contentAannotations){
+    public static List<String> generateAnnotations(List<ContentAnnotation> contentAannotations, String annotationType){
         assertTrue(!contentAannotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
         for (ContentAnnotation contentAnnotation : contentAannotations) {
-        	annotations.add("assertAnnotation(annotations, annotationType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L)");
+        	annotations.add("assertAnnotation(annotations, \""+annotationType+"\", \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
 		}
        return annotations;    	
     }

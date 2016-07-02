@@ -34,7 +34,7 @@ public class GateTest {
     
     private static final String PROJECT_FILE_NAME = "ANNIE_with_defaults.gapp";
     
-   // @Test
+    @Test
     public void shouldParseLocation() throws IOException, GateException {
         //given
         //when
@@ -58,7 +58,7 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, "Wall", 2247L);       
     }
 
-   // @Test
+    @Test
     public void shouldParsePerson() throws IOException, GateException {
         //given
         //when
@@ -81,7 +81,7 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, "Chase", 2278L);
     }
 
-    //@Test
+    @Test
     public void shouldParseLookupCountryCode() throws IOException, GateException {
         //given
         //when
@@ -214,50 +214,52 @@ public class GateTest {
         /* For Location */
         
         String annotationType = "Location";
-        annotations = getDefaultAnnotations("Location", doc);
-        String output = "";
-        for (String annotation : Asserts.generateAnnotations(annotations)) {
-        	output = output + annotation;
-		}
-        String input = "assertAnnotation(annotations, annotationType, \"Hepburn\", 0L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 68L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 487L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 548L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 638L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"Kentucky\", 794L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 1186L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"Lee\", 2214L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"U.S.\", 2251L)";
-        input = input + "assertAnnotation(annotations, annotationType, \"Wall\", 2257L)";
+        annotations = getDefaultAnnotations(annotationType, doc);
+        List<String> genAnnotations = Asserts.generateAnnotations(annotations, annotationType);
         
-        System.out.println("output is :" + output);
-        System.out.println("1 equals 2 : " + input.equals(output));
-        assertEquals(input.toString(), output);
+        String output = convertToString(genAnnotations);
+
+        String input = "assertAnnotation(annotations, \""+annotationType+"\", \"Hepburn\", 0L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 68L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 485L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Hepburn\", 546L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 636L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Kentucky\", 790L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 1180L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Lee\", 2204L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"U.S.\", 2241L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Wall\", 2247L); ";
+        
+        assertEquals(input, output);
         
     /*    For Person  */ 
-        annotations = getDefaultAnnotations("Person", doc);
-        output = "";
-        for (String annotation : Asserts.generateAnnotations(annotations)) {
-        	output = output + annotation;
-		}
+        annotationType = "Person";
+        annotations = getDefaultAnnotations(annotationType, doc);
+        genAnnotations = Asserts.generateAnnotations(annotations, annotationType);
+        output = convertToString(genAnnotations);
 
         input = ""; 
-        input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 0L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 68L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 485L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 546L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 636L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"Kentucky\", 790L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 1180L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"Lee\", 2204L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"U.S.\", 2241L)";
-		input = input + "assertAnnotation(annotations, annotationType, \"Wall\", 2247L)";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Griswold\", 11L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Salmon P. Chase\", 115L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Chase\", 242L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Mrs. Hepburn\", 350L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Henry Griswold\", 398L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Griswold\", 532L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Mrs. Hepburn\", 611L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Mrs. Hepburn\", 843L); ";
+        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Chase\", 2278L); ";
 
-        System.out.println("output is :" + output);
-        System.out.println("1 equals 2 : " + input.equals(output));
         assertEquals(input, output);
         
     }
 	
    
+    public String convertToString(List<String> annotations){
+        String str = "";
+        for (String annotation : annotations) {
+        	str = str + annotation;
+		}
+
+        return str;
+    }
 }
