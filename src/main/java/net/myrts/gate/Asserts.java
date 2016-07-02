@@ -3,10 +3,12 @@ package net.myrts.gate;
 import gate.Annotation;
 import gate.FeatureMap;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -49,5 +51,14 @@ public class Asserts {
         if (!matched) {
             fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
         }
+    }
+    
+    public static List<String> generateAnnotations(List<ContentAnnotation> contentAannotations){
+        assertTrue(!contentAannotations.isEmpty());
+        List<String> annotations = new ArrayList<>(); 
+        for (ContentAnnotation contentAnnotation : contentAannotations) {
+        	annotations.add("assertAnnotation(annotations, annotationType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L)");
+		}
+       return annotations;    	
     }
 }

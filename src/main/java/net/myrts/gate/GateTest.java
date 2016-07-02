@@ -34,7 +34,7 @@ public class GateTest {
     
     private static final String PROJECT_FILE_NAME = "ANNIE_with_defaults.gapp";
     
-    @Test
+   // @Test
     public void shouldParseLocation() throws IOException, GateException {
         //given
         //when
@@ -58,7 +58,7 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, "Wall", 2247L);       
     }
 
-    @Test
+   // @Test
     public void shouldParsePerson() throws IOException, GateException {
         //given
         //when
@@ -81,7 +81,7 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, "Chase", 2278L);
     }
 
-    @Test
+    //@Test
     public void shouldParseLookupCountryCode() throws IOException, GateException {
         //given
         //when
@@ -205,4 +205,59 @@ public class GateTest {
         return corpus;
     }
 
+    
+    @Test
+    public void generateAsserts() throws IOException, GateException {
+        Document doc = getDocument("1.txt");
+
+        List<ContentAnnotation> annotations = null ;
+        /* For Location */
+        
+        String annotationType = "Location";
+        annotations = getDefaultAnnotations("Location", doc);
+        String output = "";
+        for (String annotation : Asserts.generateAnnotations(annotations)) {
+        	output = output + annotation;
+		}
+        String input = "assertAnnotation(annotations, annotationType, \"Hepburn\", 0L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 68L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 487L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 548L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 638L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"Kentucky\", 794L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 1186L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"Lee\", 2214L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"U.S.\", 2251L)";
+        input = input + "assertAnnotation(annotations, annotationType, \"Wall\", 2257L)";
+        
+        System.out.println("output is :" + output);
+        System.out.println("1 equals 2 : " + input.equals(output));
+        assertEquals(input.toString(), output);
+        
+    /*    For Person  */ 
+        annotations = getDefaultAnnotations("Person", doc);
+        output = "";
+        for (String annotation : Asserts.generateAnnotations(annotations)) {
+        	output = output + annotation;
+		}
+
+        input = ""; 
+        input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 0L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 68L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 485L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 546L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 636L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"Kentucky\", 790L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"United States\", 1180L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"Lee\", 2204L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"U.S.\", 2241L)";
+		input = input + "assertAnnotation(annotations, annotationType, \"Wall\", 2247L)";
+
+        System.out.println("output is :" + output);
+        System.out.println("1 equals 2 : " + input.equals(output));
+        assertEquals(input, output);
+        
+    }
+	
+   
 }
