@@ -3,6 +3,7 @@ package net.myrts.gate;
 import gate.*;
 import gate.corpora.RepositioningInfo;
 import gate.creole.ResourceInstantiationException;
+import gate.gui.ontology.AnnotationPropertyAction;
 import gate.util.GateException;
 import gate.util.InvalidOffsetException;
 import gate.util.Out;
@@ -138,6 +139,20 @@ public class GateTest {
         return getContentAnnotations(annotationType, doc, annotationSet);
     }
 
+    private List<ContentAnnotation> getDefaultAnnotations(String annotationType, String annotationSubType, Document doc) throws InvalidOffsetException {
+        AnnotationSet annotationSet = doc.getAnnotations();
+        List<ContentAnnotation> subTypeAnnotations = new ArrayList<>();
+        List<ContentAnnotation> annotations = getContentAnnotations(annotationType, doc, annotationSet);
+        for (ContentAnnotation contentAnnotation : annotations) {
+            Annotation annotation = contentAnnotation.getAnnotation();
+            FeatureMap featureMap = annotation.getFeatures();
+            if (Objects.equals(annotationSubType, featureMap.get("majorType"))) {
+            	subTypeAnnotations.add(contentAnnotation);
+            }
+        }
+        return subTypeAnnotations;
+    }
+    
     private List<ContentAnnotation> getContentAnnotations(String annotationType, Document doc, AnnotationSet annotationSet) {
         FeatureMap docFeatures = doc.getFeatures();
         String originalContent = (String)
@@ -229,7 +244,7 @@ public class GateTest {
         input = input + "assertAnnotation(annotations, annotationType, \"Lee\", 2204L); ";
         input = input + "assertAnnotation(annotations, annotationType, \"U.S.\", 2241L); ";
         input = input + "assertAnnotation(annotations, annotationType, \"Wall\", 2247L); ";
-        
+
         assertEquals(input, output);
 
     /*    For Person  */ 
@@ -251,6 +266,23 @@ public class GateTest {
 
         assertEquals(input, output);
         
+      /* For lookup */
+        annotationType = "Lookup";
+        String annotationSubType = "govern_key"; 
+        annotations = getDefaultAnnotations(annotationType, annotationSubType, doc);
+        genAnnotations = Asserts.generateAnnotations(annotations, annotationType, annotationSubType);
+        output = convertToString(genAnnotations);
+        input = "";  
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 55L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 149L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 581L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 771L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 894L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 952L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 982L); ";
+        
+		assertEquals(input, output);
+		
     }
 	
    
