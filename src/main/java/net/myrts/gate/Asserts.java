@@ -57,7 +57,7 @@ public class Asserts {
         assertTrue(!contentAannotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
         for (ContentAnnotation contentAnnotation : contentAannotations) {
-        	annotations.add("assertAnnotation(annotations, \""+annotationType+"\", \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
+        	annotations.add("assertAnnotation(annotations, annotationType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
 		}
        return annotations;    	
     }

@@ -219,19 +219,19 @@ public class GateTest {
         
         String output = convertToString(genAnnotations);
 
-        String input = "assertAnnotation(annotations, \""+annotationType+"\", \"Hepburn\", 0L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 68L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 485L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Hepburn\", 546L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 636L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Kentucky\", 790L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"United States\", 1180L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Lee\", 2204L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"U.S.\", 2241L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Wall\", 2247L); ";
+        String input = "assertAnnotation(annotations, annotationType, \"Hepburn\", 0L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 68L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 485L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Hepburn\", 546L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 636L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Kentucky\", 790L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"United States\", 1180L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Lee\", 2204L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"U.S.\", 2241L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Wall\", 2247L); ";
         
         assertEquals(input, output);
-        
+
     /*    For Person  */ 
         annotationType = "Person";
         annotations = getDefaultAnnotations(annotationType, doc);
@@ -239,15 +239,15 @@ public class GateTest {
         output = convertToString(genAnnotations);
 
         input = ""; 
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Griswold\", 11L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Salmon P. Chase\", 115L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Chase\", 242L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Mrs. Hepburn\", 350L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Henry Griswold\", 398L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Griswold\", 532L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Mrs. Hepburn\", 611L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Mrs. Hepburn\", 843L); ";
-        input = input + "assertAnnotation(annotations, \""+annotationType+"\", \"Chase\", 2278L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Griswold\", 11L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Salmon P. Chase\", 115L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Chase\", 242L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Mrs. Hepburn\", 350L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Henry Griswold\", 398L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Griswold\", 532L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Mrs. Hepburn\", 611L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Mrs. Hepburn\", 843L); ";
+        input = input + "assertAnnotation(annotations, annotationType, \"Chase\", 2278L); ";
 
         assertEquals(input, output);
         
