@@ -52,21 +52,49 @@ public class Asserts {
             fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
         }
     }
+  
+    public static void assertAnnotation(List<ContentAnnotation> annotations, String annotationType, String annotationSubType, String annotationMinorType,  String matchedValue, Long startPosition) {
+        boolean matched = false;
+        for (ContentAnnotation contentAnnotation : annotations) {
+            Annotation annotation = contentAnnotation.getAnnotation();
+            FeatureMap featureMap = annotation.getFeatures();
+            if (matchedValue.equals(contentAnnotation.getMarkedText())
+                    && Objects.equals(annotationSubType, featureMap.get("majorType"))
+                    && Objects.equals(annotationMinorType, featureMap.get("minorType"))
+                    && Objects.equals(startPosition, annotation.getStartNode().getOffset())) {
+                assertEquals("Start position should match for " + contentAnnotation, startPosition, annotation.getStartNode().getOffset());
+                assertEquals("End position should match for " + contentAnnotation, Long.valueOf(startPosition + matchedValue.length()), annotation.getEndNode().getOffset());
+                matched = true;
+            }
+        }
+        if (!matched) {
+            fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
+        }
+    }
     
-    public static List<String> generateAnnotations(List<ContentAnnotation> contentAannotations, String annotationType){
-        assertTrue(!contentAannotations.isEmpty());
+    public static List<String> generateAnnotations(List<ContentAnnotation> contentAnnotations){
+        assertTrue(!contentAnnotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
-        for (ContentAnnotation contentAnnotation : contentAannotations) {
+        for (ContentAnnotation contentAnnotation : contentAnnotations) {
         	annotations.add("assertAnnotation(annotations, annotationType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
 		}
        return annotations;    	
     }
     
-    public static List<String> generateAnnotations(List<ContentAnnotation> contentAannotations, String annotationType, String annotationSubType){
-        assertTrue(!contentAannotations.isEmpty());
+    public static List<String> generateAnnotationsForLookup(List<ContentAnnotation> contentAnnotations){
+        assertTrue(!contentAnnotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
-        for (ContentAnnotation contentAnnotation : contentAannotations) {
+        for (ContentAnnotation contentAnnotation : contentAnnotations) {
         	annotations.add("assertAnnotation(annotations, annotationType, annotationSubType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
+		}
+       return annotations;    	
+    }
+    
+    public static List<String> generateAnnotationsForLookupMinor(List<ContentAnnotation> contentAnnotations){
+        assertTrue(!contentAnnotations.isEmpty());
+        List<String> annotations = new ArrayList<>(); 
+        for (ContentAnnotation contentAnnotation : contentAnnotations) {
+        	annotations.add("assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
 		}
        return annotations;    	
     }    

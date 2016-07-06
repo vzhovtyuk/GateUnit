@@ -3,7 +3,6 @@ package net.myrts.gate;
 import gate.*;
 import gate.corpora.RepositioningInfo;
 import gate.creole.ResourceInstantiationException;
-import gate.gui.ontology.AnnotationPropertyAction;
 import gate.util.GateException;
 import gate.util.InvalidOffsetException;
 import gate.util.Out;
@@ -105,8 +104,34 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, annotationSubType, "Court", 952L);
         assertAnnotation(annotations, annotationType, annotationSubType, "Court", 982L);
     }
+    
+    @Test
+    public void shouldParseLookupCity() throws IOException, GateException {
+        //given
+        //when
+        Corpus corpus = annotateDocument("1.txt");
 
+        String annotationType = "Lookup";
+        String annotationSubType = "location";
+        Iterator iter = corpus.iterator();
+        Document doc = (Document) iter.next();
+        List<ContentAnnotation> annotations = getDefaultAnnotations(annotationType, doc);
+        assertTrue(!annotations.isEmpty());
+        LOG.info("Matched annotations by " + annotationType + " annotations " + annotations);
+        
+        // then
+        String annotationMinorType = "city";
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Hepburn", 0L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Hepburn", 355L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Hepburn", 546L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Louisville", 561L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Hepburn", 616L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Hepburn", 848L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Lee", 2204L);
+        assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Wall", 2247L);
+    }
 
+   
     private Document getDocument(String inputFileName) throws GateException, IOException {
         Corpus corpus = annotateDocument(inputFileName);
 
@@ -147,6 +172,21 @@ public class GateTest {
             Annotation annotation = contentAnnotation.getAnnotation();
             FeatureMap featureMap = annotation.getFeatures();
             if (Objects.equals(annotationSubType, featureMap.get("majorType"))) {
+            	subTypeAnnotations.add(contentAnnotation);
+            }
+        }
+        return subTypeAnnotations;
+    }
+    
+    private List<ContentAnnotation> getDefaultAnnotations(String annotationType, String annotationSubType, String annotationMinorType, Document doc) throws InvalidOffsetException {
+        AnnotationSet annotationSet = doc.getAnnotations();
+        List<ContentAnnotation> subTypeAnnotations = new ArrayList<>();
+        List<ContentAnnotation> annotations = getContentAnnotations(annotationType, doc, annotationSet);
+        for (ContentAnnotation contentAnnotation : annotations) {
+            Annotation annotation = contentAnnotation.getAnnotation();
+            FeatureMap featureMap = annotation.getFeatures();
+            if (Objects.equals(annotationSubType, featureMap.get("majorType"))
+                    && Objects.equals(annotationMinorType, featureMap.get("minorType"))) {
             	subTypeAnnotations.add(contentAnnotation);
             }
         }
@@ -230,7 +270,7 @@ public class GateTest {
         
         String annotationType = "Location";
         annotations = getDefaultAnnotations(annotationType, doc);
-        List<String> genAnnotations = Asserts.generateAnnotations(annotations, annotationType);
+        List<String> genAnnotations = Asserts.generateAnnotations(annotations);
         
         String output = convertToString(genAnnotations);
 
@@ -250,7 +290,7 @@ public class GateTest {
     /*    For Person  */ 
         annotationType = "Person";
         annotations = getDefaultAnnotations(annotationType, doc);
-        genAnnotations = Asserts.generateAnnotations(annotations, annotationType);
+        genAnnotations = Asserts.generateAnnotations(annotations);
         output = convertToString(genAnnotations);
 
         input = ""; 
@@ -270,7 +310,7 @@ public class GateTest {
         annotationType = "Lookup";
         String annotationSubType = "govern_key"; 
         annotations = getDefaultAnnotations(annotationType, annotationSubType, doc);
-        genAnnotations = Asserts.generateAnnotations(annotations, annotationType, annotationSubType);
+        genAnnotations = Asserts.generateAnnotationsForLookup(annotations);
         output = convertToString(genAnnotations);
         input = "";  
 		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 55L); ";
@@ -283,9 +323,25 @@ public class GateTest {
         
 		assertEquals(input, output);
 		
+        annotationType = "Lookup";
+        annotationSubType = "location"; 
+        String annotationMinorType = "city"; 
+        annotations = getDefaultAnnotations(annotationType, annotationSubType, annotationMinorType, doc);
+        genAnnotations = Asserts.generateAnnotationsForLookupMinor(annotations);
+        output = convertToString(genAnnotations);
+        input = "";  
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 0L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 355L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 546L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Louisville\", 561L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 616L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 848L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Lee\", 2204L); ";
+		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Wall\", 2247L); ";
+		assertEquals(input, output);
+		
     }
-	
-   
+
     public String convertToString(List<String> annotations){
         String str = "";
         for (String annotation : annotations) {
