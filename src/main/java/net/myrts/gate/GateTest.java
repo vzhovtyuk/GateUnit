@@ -219,11 +219,19 @@ public class GateTest {
         return annotations;
     }
 
-    private Corpus annotateDocument(String fileName) throws GateException, IOException {
+    private Corpus annotateDocument(String fileNames) throws GateException, IOException {
         String workDir = System.getProperty("user.dir");
         System.setProperty("gate.plugins.home", workDir + "/src/main/resources/gate-home/plugins");
         System.setProperty("gate.site.config", workDir + "/src/main/resources/gate-home/gate.xml");
-        System.setProperty("gate.corpus.files", String.valueOf(new File(workDir + "/src/main/resources/corpus/" + fileName).toURI()));
+        StringBuilder corpusPathSeparated = new StringBuilder();
+        for(String fileName : fileNames.split(",")) {
+            String fullyQualifiedName = String.valueOf(new File(workDir + "/src/main/resources/corpus/" + fileName).toURI());
+            corpusPathSeparated.append(fullyQualifiedName).append(',');
+        }
+        if(corpusPathSeparated.length() > 0) {
+            corpusPathSeparated.deleteCharAt(corpusPathSeparated.length() - 1);
+            System.setProperty("gate.corpus.files", corpusPathSeparated.toString());
+        }
         // initialise the GATE library
         Out.prln("Initialising GATE...");
         Gate.init();
