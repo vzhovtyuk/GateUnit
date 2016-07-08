@@ -34,6 +34,14 @@ public class ContentAnnotation {
         sb.append(", annotationType=").append(annotation.getType());
         sb.append(", annotationStart=").append(annotation.getStartNode().getOffset());
         sb.append(", annotationEnd=").append(annotation.getEndNode().getOffset());
+        String majorType = (String) annotation.getFeatures().get("majorType");
+        if(majorType != null) {
+            sb.append(", majorType='").append(majorType).append('\'');
+            String minorType = (String) annotation.getFeatures().get("minorType");
+            if(minorType != null) {
+                sb.append(", minorType='").append(minorType).append('\'');
+            }
+        }
         sb.append('}');
         return sb.toString();
     }
