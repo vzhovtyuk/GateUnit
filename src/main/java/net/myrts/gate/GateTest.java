@@ -1,6 +1,14 @@
 package net.myrts.gate;
 
-import gate.*;
+import gate.Annotation;
+import gate.AnnotationSet;
+import gate.Corpus;
+import gate.CorpusController;
+import gate.Document;
+import gate.Factory;
+import gate.FeatureMap;
+import gate.Gate;
+import gate.GateConstants;
 import gate.corpora.RepositioningInfo;
 import gate.creole.ResourceInstantiationException;
 import gate.util.GateException;
@@ -15,10 +23,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 import static net.myrts.gate.Asserts.assertAnnotation;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for extractor component.
@@ -131,6 +145,25 @@ public class GateTest {
         assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, "Wall", 2247L);
     }
 
+
+    @Test
+    public void shouldParseNamedAnnotation() throws IOException, GateException {
+        //given
+        //when
+        Corpus corpus = annotateDocument("1.txt");
+
+        String annotationType = "FirstPerson";
+        Iterator iter = corpus.iterator();
+        Document doc = (Document) iter.next();
+        List<ContentAnnotation> annotations = getNamedAnnotations("testNE", annotationType, doc);
+        assertTrue(!annotations.isEmpty());
+        LOG.info("Matched annotations by " + annotationType + " annotations " + annotations);
+
+        // then
+        assertAnnotation(annotations, annotationType, "Salmon", 115L);
+        assertAnnotation(annotations, annotationType, "Henry", 398L);
+        assertAnnotation(annotations, annotationType, "Lee", 2204L);
+    }
    
     private Document getDocument(String inputFileName) throws GateException, IOException {
         Corpus corpus = annotateDocument(inputFileName);
@@ -152,8 +185,8 @@ public class GateTest {
         return (CorpusController) PersistenceManager.loadObjectFromFile(annieGapp);
     } // initGateProject()
 
-    private List<ContentAnnotation> getNamedAnnotations(String annotationType, Document doc) throws InvalidOffsetException {
-        AnnotationSet annotationSet = doc.getAnnotations(annotationType);
+    private List<ContentAnnotation> getNamedAnnotations(String annotationSetName, String annotationType, Document doc) throws InvalidOffsetException {
+        AnnotationSet annotationSet = doc.getAnnotations(annotationSetName);
         assertNotNull(annotationSet);
         return getContentAnnotations(annotationType, doc, annotationSet);
     }
@@ -278,9 +311,8 @@ public class GateTest {
         
         String annotationType = "Location";
         annotations = getDefaultAnnotations(annotationType, doc);
-        List<String> genAnnotations = Asserts.generateAnnotations(annotations);
         
-        String output = convertToString(genAnnotations);
+        String output = Asserts.generateAsserts(annotations);
 
         String input = "assertAnnotation(annotations, annotationType, \"Hepburn\", 0L); ";
         input = input + "assertAnnotation(annotations, annotationType, \"United States\", 68L); ";
@@ -298,8 +330,7 @@ public class GateTest {
     /*    For Person  */ 
         annotationType = "Person";
         annotations = getDefaultAnnotations(annotationType, doc);
-        genAnnotations = Asserts.generateAnnotations(annotations);
-        output = convertToString(genAnnotations);
+        output = Asserts.generateAsserts(annotations);
 
         input = ""; 
         input = input + "assertAnnotation(annotations, annotationType, \"Griswold\", 11L); ";
@@ -318,8 +349,7 @@ public class GateTest {
         annotationType = "Lookup";
         String annotationSubType = "govern_key"; 
         annotations = getDefaultAnnotations(annotationType, annotationSubType, doc);
-        genAnnotations = Asserts.generateAnnotationsForLookup(annotations);
-        output = convertToString(genAnnotations);
+        output = Asserts.generateAssertsForSubType(annotations);
         input = "";  
 		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 55L); ";
 		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, \"Court\", 149L); ";
@@ -335,8 +365,7 @@ public class GateTest {
         annotationSubType = "location"; 
         String annotationMinorType = "city"; 
         annotations = getDefaultAnnotations(annotationType, annotationSubType, annotationMinorType, doc);
-        genAnnotations = Asserts.generateAnnotationsForLookupMinor(annotations);
-        output = convertToString(genAnnotations);
+        output = Asserts.generateAssertsForMinorSubType(annotations);
         input = "";  
 		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 0L); ";
 		input = input + "assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \"Hepburn\", 355L); ";
@@ -350,12 +379,5 @@ public class GateTest {
 		
     }
 
-    public String convertToString(List<String> annotations){
-        String str = "";
-        for (String annotation : annotations) {
-        	str = str + annotation;
-		}
-
-        return str;
-    }
+    
 }

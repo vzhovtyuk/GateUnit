@@ -71,8 +71,20 @@ public class Asserts {
             fail("Failed to match by type '" + annotationType + "' expected value '" + matchedValue + "' start offset=" + startPosition);
         }
     }
+
+    static String generateAsserts(List<ContentAnnotation> contentAnnotations){
+        return convertToString(generateAnnotations(contentAnnotations));
+    }
+
+    static String generateAssertsForSubType(List<ContentAnnotation> annotations) {
+        return convertToString(generateAnnotationsForSubType(annotations));
+    }
     
-    public static List<String> generateAnnotations(List<ContentAnnotation> contentAnnotations){
+    static String generateAssertsForMinorSubType(List<ContentAnnotation> annotations) {
+        return convertToString(generateAnnotationsForMinorSubType(annotations));
+    }
+    
+    private static List<String> generateAnnotations(List<ContentAnnotation> contentAnnotations){
         assertTrue(!contentAnnotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
         for (ContentAnnotation contentAnnotation : contentAnnotations) {
@@ -81,7 +93,7 @@ public class Asserts {
        return annotations;    	
     }
     
-    public static List<String> generateAnnotationsForLookup(List<ContentAnnotation> contentAnnotations){
+    private static List<String> generateAnnotationsForSubType(List<ContentAnnotation> contentAnnotations){
         assertTrue(!contentAnnotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
         for (ContentAnnotation contentAnnotation : contentAnnotations) {
@@ -90,12 +102,23 @@ public class Asserts {
        return annotations;    	
     }
     
-    public static List<String> generateAnnotationsForLookupMinor(List<ContentAnnotation> contentAnnotations){
+    private static List<String> generateAnnotationsForMinorSubType(List<ContentAnnotation> contentAnnotations){
         assertTrue(!contentAnnotations.isEmpty());
         List<String> annotations = new ArrayList<>(); 
         for (ContentAnnotation contentAnnotation : contentAnnotations) {
         	annotations.add("assertAnnotation(annotations, annotationType, annotationSubType, annotationMinorType, \""+contentAnnotation.getMarkedText()+"\", "+contentAnnotation.getAnnotation().getStartNode().getOffset()+"L); ");
 		}
        return annotations;    	
-    }    
+    }
+
+    private static String convertToString(List<String> annotations){
+        String str = "";
+        for (String annotation : annotations) {
+            str = str + annotation;
+        }
+
+        return str;
+    }
+
+    
 }
