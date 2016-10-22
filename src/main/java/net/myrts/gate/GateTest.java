@@ -16,9 +16,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -41,20 +39,55 @@ public class GateTest {
     private static final String PROJECT_FILE_NAME = "ANNIE_with_defaults.gapp";
 
     @Test
-    public void generatingJAXB() throws JAXBException, IOException, GateException {
+    public void checkUnmarshalling() throws JAXBException, IOException, GateException {
         JAXBContext context = JAXBContext.newInstance(GateDocument.class);
 
-        processAndSaveToXML("1.txt");
-        File file = new File("src\\main\\resources\\gate_output.xml");
+        File file = new File("src/main/resources/gate_output.xml");
         Unmarshaller um = context.createUnmarshaller();
         GateDocument gateDoc = (GateDocument) um.unmarshal(file);
 
         assertNotNull(gateDoc);
 
+        HashMap<String, document.AnnotationSet> annotationSetsMap = new HashMap<>();
+        for (document.AnnotationSet set : gateDoc.getAnnotationSet()) {
+            annotationSetsMap.put(set.getName(), set);
+        }
+        assertTrue(annotationSetsMap.containsKey(null));
+        assertTrue(annotationSetsMap.containsKey("testNE"));
+
+        List<document.Annotation> annotationList = annotationSetsMap.get("testNE").getAnnotation();
+        assertAnnotation(annotationList, gateDoc.getTextWithNodes(), "FirstPerson", "Salmon", 115L);
+        assertAnnotation(annotationList, gateDoc.getTextWithNodes(), "FirstPerson", "Henry", 398L);
+        assertAnnotation(annotationList, gateDoc.getTextWithNodes(), "FirstPerson", "Lee", 2204L);
+    }
+
+    @Test
+    public void checkMarshalling() throws JAXBException, IOException, GateException {
+        JAXBContext context = JAXBContext.newInstance(GateDocument.class);
+
+        StringWriter stringJAXBout = new StringWriter();
+        GateDocument gateDoc = getGateDocument("src/main/resources/gate_output.xml");
         Marshaller m = context.createMarshaller();
         m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        m.marshal(gateDoc, new File("src\\main\\resources\\jaxb_output.xml"));
-//        m.marshal(gateDoc, System.out);
+        m.marshal(gateDoc, stringJAXBout);
+
+        StringReader stringJAXBin = new StringReader(stringJAXBout.toString());
+        Unmarshaller um = context.createUnmarshaller();
+        GateDocument unmarshalledGateDoc = (GateDocument) um.unmarshal(stringJAXBin);
+
+        for (int i = 0; i < gateDoc.getAnnotationSet().size(); i++) {
+            assertEquals(gateDoc.getAnnotationSet().get(i).getAnnotation().size(),
+                    unmarshalledGateDoc.getAnnotationSet().get(i).getAnnotation().size());
+        }
+    }
+
+    @Test
+    public void processAndSaveToXML() throws IOException, GateException {
+        String doc = getDocument("1.txt").toXml();
+        assertNotNull(doc);
+        PrintWriter out = new PrintWriter("gate_output.xml");
+        out.println(doc);
+        out.close();
     }
 
     @Test
@@ -181,11 +214,13 @@ public class GateTest {
         return (Document) iter.next();
     }
 
-    private void processAndSaveToXML(String inputFileName) throws IOException, GateException {
-        String doc = getDocument(inputFileName).toXml();
-        PrintWriter out = new PrintWriter("src/main/resources/gate_output.xml");
-        out.println(doc);
-        out.close();
+    private GateDocument getGateDocument(String inputFilePath) throws JAXBException {
+        JAXBContext context = JAXBContext.newInstance(GateDocument.class);
+
+        File file = new File(inputFilePath);
+        Unmarshaller um = context.createUnmarshaller();
+
+        return (GateDocument) um.unmarshal(file);
     }
 
     /**
